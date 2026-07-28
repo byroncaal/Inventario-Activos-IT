@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+
+    <TextView
+        android:id="@+id/tvTitulo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Inventario de Activos IT"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:paddingBottom="12dp"/>
+
+    <Button
+        android:id="@+id/btnNuevo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="+ Nuevo activo"/>
+
+    <TextView
+        android:id="@+id/tvContador"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Activos (0):"
+        android:textStyle="bold"
+        android:paddingTop="16dp"
+        android:paddingBottom="4dp"/>
+
+    <TextView
+        android:id="@+id/tvAyuda"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Toca un activo para eliminarlo"
+        android:textSize="12sp"
+        android:textColor="#888888"
+        android:paddingBottom="8dp"/>
+
+    <ListView
+        android:id="@+id/lvActivos"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+</LinearLayout>
