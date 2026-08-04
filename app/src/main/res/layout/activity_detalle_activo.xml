@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Barra superior Material, en vez del TextView de título que usábamos antes -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbarDetalle"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:title="Detalle del activo"
+            app:titleTextColor="@android:color/white" />
+
+        <!-- Contenido con padding, centrado -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:padding="24dp">
+
+            <!-- Foto grande del activo. Reutiliza el mismo estilo circular del formulario -->
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/ivFotoDetalle"
+                android:layout_width="180dp"
+                android:layout_height="180dp"
+                android:scaleType="centerCrop"
+                android:background="#E7E0EC"
+                android:src="@android:drawable/ic_menu_camera"
+                android:contentDescription="Foto del activo"
+                app:shapeAppearanceOverlay="@style/FotoCircular"
+                app:strokeColor="?attr/colorPrimary"
+                app:strokeWidth="3dp" />
+
+            <TextView
+                android:id="@+id/tvEtiquetaDetalle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                tools:text="Etiqueta del activo" />
+
+            <TextView
+                android:id="@+id/tvModeloDetalle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="18sp"
+                tools:text="Modelo: XXX" />
+
+            <TextView
+                android:id="@+id/tvSerieDetalle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textSize="18sp"
+                tools:text="Serie: XXX" />
+
+            <TextView
+                android:id="@+id/tvEstadoDetalle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="Estado: Activo" />
+
+            <!-- Fila de acciones: Editar y Eliminar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEditar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:text="Editar"
+                    app:icon="@android:drawable/ic_menu_edit" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnEliminar"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="Eliminar"
+                    app:icon="@android:drawable/ic_menu_delete" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

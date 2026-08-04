@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,87 +12,125 @@
         android:id="@+id/tvTituloFormulario"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:paddingBottom="16dp"
         android:text="Nuevo activo"
         android:textSize="24sp"
-        android:textStyle="bold"
-        android:paddingBottom="16dp"/>
+        android:textStyle="bold" />
 
     <!-- Antes no tenía id, ahora se llama tilEtiqueta -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilEtiqueta"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+        android:layout_height="wrap_content">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etEtiqueta"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Etiqueta"
-            android:inputType="text"/>
+            android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
 
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilModelo"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+        android:layout_marginTop="8dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etModelo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Modelo"
-            android:inputType="text"/>
+            android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
 
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilSerie"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+        android:layout_marginTop="8dp">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etSerie"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Serie"
-            android:inputType="text"/>
+            android:inputType="text" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:id="@+id/tvEstadoLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:text="Estado: Activo"
-        android:textStyle="bold"
-        android:layout_marginTop="20dp"/>
+        android:textStyle="bold" />
 
     <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/switchEstado"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Activo"
+        android:layout_marginTop="4dp"
         android:checked="true"
-        android:layout_marginTop="4dp"/>
+        android:text="Activo" />
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/ivFoto"
+        android:layout_width="130dp"
+        android:layout_height="130dp"
+        android:scaleType="centerCrop"
+        android:background="#E7E0EC"
+        android:src="@android:drawable/ic_menu_camera"
+        android:contentDescription="Agregar foto de Activo"
+        app:shapeAppearanceOverlay="@style/FotoCircular"
+        app:strokeColor="?attr/colorPrimary"
+        app:strokeWidth="3dp"/>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp">
+       <com.google.android.material.button.MaterialButton
+           android:id="@+id/btnFoto"
+           style="@style/Widget.Material3.Button.TextButton.Icon"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:text="Galeria"
+           app:icon="@android:drawable/ic_menu_gallery"/>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCamara"
+            style="@style/Widget.Material3.Button.TextButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Camara"
+            app:icon="@android:drawable/ic_menu_camera"/>
+    </LinearLayout>
+ <com.google.android.material.checkbox.MaterialCheckBox
+     android:id="@+id/cbTerminos"
+     android:layout_width="match_parent"
+     android:layout_height="wrap_content"
+     android:text="Acepto los terminos y condiciones"
+     android:layout_margin="8dp"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnGuardar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Guardar"
-        android:layout_marginTop="24dp"/>
+        android:layout_marginTop="24dp"
+        android:text="Guardar" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnCancelar"
         style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Cancelar"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="8dp"
+        android:text="Cancelar"/>
 
 </LinearLayout>

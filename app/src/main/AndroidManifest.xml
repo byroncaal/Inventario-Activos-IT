@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Necesario para poder usar la cámara del dispositivo (botón "Cámara" en el formulario) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -26,6 +29,26 @@
         <!-- Formulario para agregar un activo nuevo. No es de entrada, solo se abre desde MainActivity -->
         <activity
             android:name=".agregar_activo"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!--
+            FileProvider: genera Uris "content://" seguras para compartir archivos (la foto)
+            entre nuestra app y la app de cámara del sistema, sin exponer la ruta real del archivo.
+            Requerido desde Android 7 (API 24) en adelante.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <!-- Apunta al archivo que define QUÉ carpetas puede exponer el FileProvider -->
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+        <activity
+            android:name=".detalle_activo"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
