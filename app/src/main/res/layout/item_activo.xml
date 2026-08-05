@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Layout de UNA fila de la lista principal. Antes usábamos el layout genérico
+    de Android (simple_list_item_1), ahora cada fila es una MaterialCardView
+    con foto, etiqueta, modelo+serie, y un texto de estado con color.
+-->
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp">
+
+        <!-- Miniatura circular de la foto del activo -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/ivFotoItem"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:scaleType="centerCrop"
+            android:background="#E7E0EC"
+            android:src="@android:drawable/ic_menu_camera"
+            android:contentDescription="Foto del activo"
+            app:shapeAppearanceOverlay="@style/FotoCircular" />
+
+        <!-- Bloque de texto: etiqueta arriba, modelo+serie abajo en gris -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvEtiquetaItem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="Laptop Dell" />
+
+            <TextView
+                android:id="@+id/tvModeloSerieItem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="#666666"
+                tools:text="Latitude 5420 · SN12345" />
+        </LinearLayout>
+
+        <!-- Estado (Activo/Baja): su color se define en el código (verde/rojo) -->
+        <TextView
+            android:id="@+id/tvEstadoItem"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp"
+            tools:text="Activo" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

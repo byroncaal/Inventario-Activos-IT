@@ -7,7 +7,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -58,9 +57,6 @@ public class detalle_activo extends AppCompatActivity {
         // Recupera lo que mandó MainActivity al abrir esta pantalla
         activoActual = (Activo) getIntent().getSerializableExtra("EXTRA_ACTIVO");
         posicion = getIntent().getIntExtra("EXTRA_POSICION", -1);
-        if (activoActual == null) {
-            Toast.makeText(this, "DEBUG: activoActual llegó null", Toast.LENGTH_LONG).show();
-        }
 
         ImageView ivFotoDetalle = findViewById(R.id.ivFotoDetalle);
         TextView tvEtiquetaDetalle = findViewById(R.id.tvEtiquetaDetalle);
@@ -76,10 +72,17 @@ public class detalle_activo extends AppCompatActivity {
             tvSerieDetalle.setText("Serie: " + activoActual.getSerie());
             tvEstadoDetalle.setText("Estado: " + activoActual.getEstado());
 
-            // Solo intenta cargar la foto si el activo tiene una guardada
+            // Solo intenta cargar la foto si el activo tiene una guardada.
+            // Protegido con try/catch: si la app perdió el permiso de lectura sobre
+            // esta Uri (por ejemplo, fotos guardadas ANTES de este fix), no truena
+            // la app — simplemente deja el ícono por defecto que ya trae el layout.
             String foto = activoActual.getFoto();
             if (foto != null && !foto.isEmpty()) {
-                ivFotoDetalle.setImageURI(Uri.parse(foto));
+                try {
+                    ivFotoDetalle.setImageURI(Uri.parse(foto));
+                } catch (SecurityException e) {
+                    ivFotoDetalle.setImageResource(android.R.drawable.ic_menu_camera);
+                }
             }
         }
 
