@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Layout de UNA fila de la lista principal. Antes usábamos el layout genérico
-    de Android (simple_list_item_1), ahora cada fila es una MaterialCardView
-    con foto, etiqueta, modelo+serie, y un texto de estado con color.
--->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -21,7 +16,7 @@
         android:gravity="center_vertical"
         android:padding="12dp">
 
-        <!-- Miniatura circular de la foto del activo -->
+
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivFotoItem"
             android:layout_width="52dp"
@@ -32,7 +27,6 @@
             android:contentDescription="Foto del activo"
             app:shapeAppearanceOverlay="@style/FotoCircular" />
 
-        <!-- Bloque de texto: etiqueta arriba, modelo+serie abajo en gris -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -57,7 +51,7 @@
                 tools:text="Latitude 5420 · SN12345" />
         </LinearLayout>
 
-        <!-- Estado (Activo/Baja): su color se define en el código (verde/rojo) -->
+
         <TextView
             android:id="@+id/tvEstadoItem"
             android:layout_width="wrap_content"

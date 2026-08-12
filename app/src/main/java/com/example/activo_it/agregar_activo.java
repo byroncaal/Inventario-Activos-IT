@@ -30,62 +30,43 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.File;
 
-// Este Activity sirve para DOS casos: crear un activo nuevo (esEdicion = false)
-// y editar uno existente (esEdicion = true). Se decide según si llegó o no
-// un Activo + posición en el Intent que abrió esta pantalla.
 public class agregar_activo extends AppCompatActivity {
 
     // Guarda la dirección (Uri) de la foto elegida o tomada.
-    // Se guarda como Uri en memoria, pero se pasa como String (foto.toString()) al Activo.
     private Uri fotoUri = null;
     private ImageView ivFoto;
-
-    // Vista raíz del layout. La necesitamos como ancla para mostrar Snackbar,
-    // ya que Snackbar.make() requiere un View visible en pantalla, no un Context.
     private View vistaRaiz;
 
     // Indica si estamos editando un activo existente o creando uno nuevo
     private boolean esEdicion = false;
     // Posición del activo dentro de la lista original (solo válida si esEdicion = true)
     private int posicionRecibida = -1;
-
-    // Referencias a los TextInputLayout (el "contenedor" visual del campo).
-    // setError() se llama sobre ESTOS, no sobre el TextInputEditText de adentro,
-    // porque es el TextInputLayout quien dibuja el mensaje en rojo bajo el campo.
     private TextInputLayout tilEtiqueta, tilModelo, tilSerie;
-
-    // Lanzador de galería: usamos OpenDocument() en vez de GetContent() porque
-    // OpenDocument SÍ permite pedir un permiso de lectura PERSISTENTE sobre la
-    // Uri elegida. Con GetContent(), el permiso era solo temporal y se perdía
-    // al salir de esta pantalla, causando un crash (SecurityException) cuando
-    // detalle_activo intentaba mostrar esa misma foto más tarde.
     private final ActivityResultLauncher<String[]> seleccionarFoto =
             registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri != null) {
                     try {
-                        // Pide que el permiso de lectura sobre esta Uri se mantenga
-                        // más allá de esta pantalla (persiste incluso tras reiniciar la app)
+                        // Pide que el permiso de lectura sobre esta Uri se manteng
                         getContentResolver().takePersistableUriPermission(
                                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     } catch (SecurityException e) {
-                        // Algunos proveedores de archivos no soportan permiso persistente;
-                        // lo ignoramos y seguimos, la foto igual se muestra en esta pantalla
+
                     }
                     fotoUri = uri;              // guardamos la dirección de la imagen elegida
-                    ivFoto.setImageURI(uri);    // la mostramos de inmediato en el ImageView
+                    ivFoto.setImageURI(uri);    // la mostramos de en el ImageView
                 }
             });
 
-    // Lanzador de cámara: toma una foto nueva y la guarda en la Uri que ya preparamos (fotoUri)
+    //  toma una foto nueva y la guarda en la Uri
     private final ActivityResultLauncher<Uri> tomarFoto =
             registerForActivityResult(new ActivityResultContracts.TakePicture(), exito -> {
                 if (exito) {
-                    // La foto ya quedó guardada físicamente en fotoUri (se la pasamos al lanzar la cámara)
+                    // La foto ya quedó guardada físicamente en fotoUri
                     ivFoto.setImageURI(fotoUri);
                 }
             });
 
-    // Pide el permiso de cámara en tiempo de ejecución (obligatorio desde Android 6+)
+    // Pide el permiso de cámara en tiempo de ejecución
     private final ActivityResultLauncher<String> pedirPermisoCamara =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), concedido -> {
                 if (concedido) {

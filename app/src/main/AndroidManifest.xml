@@ -15,7 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Activo_IT">
 
-        <!-- Pantalla principal: lista de activos. Es la puerta de entrada de la app -->
+        <!-- Pantalla principal: lista de activos. Es la entrada de la app -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

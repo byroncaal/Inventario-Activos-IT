@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pantalla principal: Toolbar + botón nuevo + buscador + contador + lista de tarjetas -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
@@ -7,7 +6,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- Barra superior Material, reemplaza al TextView de título que usábamos antes -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbarMain"
         android:layout_width="match_parent"
@@ -16,7 +14,6 @@
         app:title="Inventario de Activos IT"
         app:titleTextColor="@android:color/white" />
 
-    <!-- Todo lo demás va con su propio padding, separado de la Toolbar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -29,7 +26,7 @@
             android:layout_height="wrap_content"
             android:text="+ Nuevo activo" />
 
-        <!-- Buscador: TextInputLayout con ícono de lupa, filtra en vivo mientras se escribe -->
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilBuscar"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -46,7 +43,7 @@
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Contador dinámico: se actualiza en código cada vez que cambia la lista -->
+
         <TextView
             android:id="@+id/tvContador"
             android:layout_width="wrap_content"
@@ -65,8 +62,6 @@
             android:textColor="#888888"
             android:paddingBottom="8dp" />
 
-        <!-- divider en null/0: las MaterialCardView ya traen su propio espaciado y sombra,
-             así que la línea divisoria del ListView sobraría visualmente -->
         <ListView
             android:id="@+id/lvActivos"
             android:layout_width="match_parent"

@@ -7,7 +7,6 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Antes no tenía id, ahora se llama tvTituloFormulario -->
     <TextView
         android:id="@+id/tvTituloFormulario"
         android:layout_width="wrap_content"
@@ -17,7 +16,7 @@
         android:textSize="24sp"
         android:textStyle="bold" />
 
-    <!-- Antes no tenía id, ahora se llama tilEtiqueta -->
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilEtiqueta"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -82,13 +81,12 @@
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/ivFoto"
-        android:layout_width="130dp"
+        android:layout_width="180dp"
         android:layout_height="130dp"
         android:scaleType="centerCrop"
         android:background="#E7E0EC"
         android:src="@android:drawable/ic_menu_camera"
         android:contentDescription="Agregar foto de Activo"
-        app:shapeAppearanceOverlay="@style/FotoCircular"
         app:strokeColor="?attr/colorPrimary"
         app:strokeWidth="3dp"/>
     <LinearLayout

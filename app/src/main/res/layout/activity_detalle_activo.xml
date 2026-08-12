@@ -11,16 +11,14 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Barra superior Material, en vez del TextView de título que usábamos antes -->
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbarDetalle"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             app:title="Detalle del activo"
-            app:titleTextColor="@android:color/white" />
+            app:titleTextColor="@android:color/holo_blue_bright" />
 
-        <!-- Contenido con padding, centrado -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -28,7 +26,6 @@
             android:gravity="center_horizontal"
             android:padding="24dp">
 
-            <!-- Foto grande del activo. Reutiliza el mismo estilo circular del formulario -->
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/ivFotoDetalle"
                 android:layout_width="180dp"
@@ -37,7 +34,6 @@
                 android:background="#E7E0EC"
                 android:src="@android:drawable/ic_menu_camera"
                 android:contentDescription="Foto del activo"
-                app:shapeAppearanceOverlay="@style/FotoCircular"
                 app:strokeColor="?attr/colorPrimary"
                 app:strokeWidth="3dp" />
 
@@ -75,7 +71,6 @@
                 android:textStyle="bold"
                 tools:text="Estado: Activo" />
 
-            <!-- Fila de acciones: Editar y Eliminar -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

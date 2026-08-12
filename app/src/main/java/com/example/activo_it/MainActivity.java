@@ -28,8 +28,6 @@ public class MainActivity extends AppCompatActivity {
     // Lista en memoria: guarda todos los activos mientras la app esté abierta
     private final ArrayList<Activo> activos = new ArrayList<>();
 
-    // Adapter personalizado (dibuja MaterialCardView), pero sigue siendo un
-    // ArrayAdapter por dentro, así que conserva getFilter() para el buscador
     private ActivoAdapter adapter;
 
     private TextView tvContador;
@@ -143,3 +141,4 @@ public class MainActivity extends AppCompatActivity {
         tvContador.setText("Activos (" + activos.size() + "):");
     }
 }
+

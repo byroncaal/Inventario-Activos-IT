@@ -73,9 +73,6 @@ public class detalle_activo extends AppCompatActivity {
             tvEstadoDetalle.setText("Estado: " + activoActual.getEstado());
 
             // Solo intenta cargar la foto si el activo tiene una guardada.
-            // Protegido con try/catch: si la app perdió el permiso de lectura sobre
-            // esta Uri (por ejemplo, fotos guardadas ANTES de este fix), no truena
-            // la app — simplemente deja el ícono por defecto que ya trae el layout.
             String foto = activoActual.getFoto();
             if (foto != null && !foto.isEmpty()) {
                 try {
@@ -111,3 +108,5 @@ public class detalle_activo extends AppCompatActivity {
         });
     }
 }
+
+
