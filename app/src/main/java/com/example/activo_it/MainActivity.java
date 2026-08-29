@@ -25,21 +25,25 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    // Lista en memoria: guarda todos los activos mientras la app esté abierta
+    // Lista en memoria: se carga desde SQLite al abrir la app y se mantiene
+    // sincronizada con la base de datos en cada operación
     private final ArrayList<Activo> activos = new ArrayList<>();
 
     private ActivoAdapter adapter;
+    private ActivoDbHelper dbHelper;
 
     private TextView tvContador;
 
-    // Lanzador para CREAR: abre agregar_activo vacío y espera un Activo nuevo de vuelta
+    // Lanzador para CREAR: abre agregar_activo vacío, guarda en SQLite y espera un Activo nuevo de vuelta
     private final ActivityResultLauncher<Intent> lanzadorFormulario =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), resultado -> {
                 if (resultado.getResultCode() == Activity.RESULT_OK && resultado.getData() != null) {
                     Activo nuevo = (Activo) resultado.getData().getSerializableExtra("EXTRA_ACTIVO");
                     if (nuevo != null) {
-                        activos.add(nuevo);
-                        adapter.notifyDataSetChanged(); // redibuja el ListView con el nuevo elemento
+                        long id = dbHelper.insertActivo(nuevo);
+                        nuevo.setId(id);
+                        activos.add(0, nuevo); // arriba, coincide con el orden de la BD (más reciente primero)
+                        adapter.notifyDataSetChanged();
                         actualizarContador();
                     }
                 }
@@ -60,9 +64,12 @@ public class MainActivity extends AppCompatActivity {
                     if ("ACTUALIZAR".equals(accion)) {
                         Activo actualizado = (Activo) data.getSerializableExtra("EXTRA_ACTIVO");
                         if (actualizado != null) {
+                            dbHelper.actualizarActivo(actualizado);
                             activos.set(posicion, actualizado); // reemplaza el activo viejo por el editado
                         }
                     } else if ("ELIMINAR".equals(accion)) {
+                        Activo eliminado = activos.get(posicion);
+                        dbHelper.eliminarActivo(eliminado.getId());
                         activos.remove(posicion);
                     }
 
@@ -93,12 +100,15 @@ public class MainActivity extends AppCompatActivity {
         TextInputEditText etBuscar = findViewById(R.id.etBuscar);
         tvContador = findViewById(R.id.tvContador);
 
+        dbHelper = new ActivoDbHelper(this);
+        activos.addAll(dbHelper.obtenerTodos()); // carga lo guardado en sesiones anteriores
+
         // Se crea con la lista "activos": cualquier cambio en la lista se refleja
         // llamando adapter.notifyDataSetChanged()
         adapter = new ActivoAdapter(this, activos);
         lvActivos.setAdapter(adapter);
 
-        actualizarContador(); // texto inicial "Activos (0):"
+        actualizarContador(); // texto inicial "Activos (N):"
 
         // Abrir el formulario para agregar un activo nuevo
         btnNuevo.setOnClickListener(v -> {
@@ -141,4 +151,3 @@ public class MainActivity extends AppCompatActivity {
         tvContador.setText("Activos (" + activos.size() + "):");
     }
 }
-

@@ -10,6 +10,9 @@ public class Activo implements Serializable {
     public static final String ESTADO_ACTIVO = "Activo";
     public static final String ESTADO_BAJA = "Baja";
 
+    // Id de la fila en SQLite. -1 significa "todavía no guardado en la base de datos".
+    private long id = -1;
+
     private String etiqueta;
     private String modelo;
     private String serie;
@@ -22,6 +25,14 @@ public class Activo implements Serializable {
         this.serie = serie;
         this.estado = estado;
         this.foto = foto;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public String getEtiqueta() {

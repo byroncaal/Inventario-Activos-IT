@@ -41,6 +41,8 @@ public class agregar_activo extends AppCompatActivity {
     private boolean esEdicion = false;
     // Posición del activo dentro de la lista original (solo válida si esEdicion = true)
     private int posicionRecibida = -1;
+    // Activo original recibido (para conservar su id al editar)
+    private Activo activoRecibido;
     private TextInputLayout tilEtiqueta, tilModelo, tilSerie;
     private final ActivityResultLauncher<String[]> seleccionarFoto =
             registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
@@ -113,7 +115,7 @@ public class agregar_activo extends AppCompatActivity {
         ivFoto = findViewById(R.id.ivFoto);
 
         // ¿Nos mandaron un Activo existente? Si sí, esto es una EDICIÓN, no una creación.
-        Activo activoRecibido = (Activo) getIntent().getSerializableExtra("EXTRA_ACTIVO");
+        activoRecibido = (Activo) getIntent().getSerializableExtra("EXTRA_ACTIVO");
         posicionRecibida = getIntent().getIntExtra("EXTRA_POSICION", -1);
         esEdicion = (posicionRecibida != -1 && activoRecibido != null);
 
@@ -198,6 +200,11 @@ public class agregar_activo extends AppCompatActivity {
             String foto = fotoUri != null ? fotoUri.toString() : "";
 
             Activo activoFinal = new Activo(etiqueta, modelo, serie, estado, foto);
+
+            // Si es edición, conserva el id original para que el UPDATE en SQLite funcione
+            if (esEdicion) {
+                activoFinal.setId(activoRecibido.getId());
+            }
 
             // Empaqueta el Activo dentro del resultado, para que quien nos abrió
             // (MainActivity o detalle_activo) lo reciba en su callback correspondiente
