@@ -1,11 +1,13 @@
 package com.example.activo_it;
 
 import android.app.Activity;
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ImageView;
@@ -21,15 +23,23 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanner;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.mlkit.vision.barcode.common.Barcode;
 
 import java.io.File;
+import java.util.Calendar;
+import java.util.Locale;
 
+// Formulario único para CREAR y EDITAR un activo. El modo se determina
+// según si llegó un Activo existente por Intent (ver esEdicion).
 public class agregar_activo extends AppCompatActivity {
 
     // Guarda la dirección (Uri) de la foto elegida o tomada.
@@ -43,27 +53,30 @@ public class agregar_activo extends AppCompatActivity {
     private int posicionRecibida = -1;
     // Activo original recibido (para conservar su id al editar)
     private Activo activoRecibido;
-    private TextInputLayout tilEtiqueta, tilModelo, tilSerie;
+
+    private TextInputLayout tilEtiqueta, tilTipo, tilMarca, tilModelo, tilSerie;
+
+    // Selector de imagen de la galería (respeta el sistema de permisos moderno)
     private final ActivityResultLauncher<String[]> seleccionarFoto =
             registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri != null) {
                     try {
-                        // Pide que el permiso de lectura sobre esta Uri se manteng
+                        // Pide que el permiso de lectura sobre esta Uri se mantenga
+                        // aunque la app se cierre y se vuelva a abrir más tarde.
                         getContentResolver().takePersistableUriPermission(
                                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     } catch (SecurityException e) {
-
+                        // Algunos proveedores no soportan permisos persistentes; se ignora.
                     }
-                    fotoUri = uri;              // guardamos la dirección de la imagen elegida
-                    ivFoto.setImageURI(uri);    // la mostramos de en el ImageView
+                    fotoUri = uri;
+                    ivFoto.setImageURI(uri);
                 }
             });
 
-    //  toma una foto nueva y la guarda en la Uri
+    // Toma una foto nueva y la guarda en la Uri preparada por abrirCamara()
     private final ActivityResultLauncher<Uri> tomarFoto =
             registerForActivityResult(new ActivityResultContracts.TakePicture(), exito -> {
                 if (exito) {
-                    // La foto ya quedó guardada físicamente en fotoUri
                     ivFoto.setImageURI(fotoUri);
                 }
             });
@@ -72,7 +85,7 @@ public class agregar_activo extends AppCompatActivity {
     private final ActivityResultLauncher<String> pedirPermisoCamara =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), concedido -> {
                 if (concedido) {
-                    abrirCamara(); // si el usuario aceptó, ahora sí abrimos la cámara
+                    abrirCamara();
                 } else {
                     Snackbar.make(vistaRaiz, "Permiso de cámara denegado", Snackbar.LENGTH_SHORT).show();
                 }
@@ -84,10 +97,8 @@ public class agregar_activo extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_agregar_activo);
 
-        // Guardamos la vista raíz para poder usarla luego en los Snackbar
         vistaRaiz = findViewById(R.id.main);
 
-        // Ajusta el padding para que el contenido no quede debajo de la barra de estado/navegación
         ViewCompat.setOnApplyWindowInsetsListener(vistaRaiz, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -96,17 +107,36 @@ public class agregar_activo extends AppCompatActivity {
 
         TextView tvTituloFormulario = findViewById(R.id.tvTituloFormulario);
 
-        // Los TextInputLayout completos (para poder marcar errores)
+        // Los TextInputLayout completos (para poder marcar errores con setError)
         tilEtiqueta = findViewById(R.id.tilEtiqueta);
+        tilTipo = findViewById(R.id.tilTipo);
+        tilMarca = findViewById(R.id.tilMarca);
         tilModelo = findViewById(R.id.tilModelo);
         tilSerie = findViewById(R.id.tilSerie);
 
-        // Los campos de texto de adentro (para leer/escribir el texto)
         TextInputEditText etEtiqueta = findViewById(R.id.etEtiqueta);
+        TextInputEditText etTipo = findViewById(R.id.etTipo);
+        TextInputEditText etMarca = findViewById(R.id.etMarca);
         TextInputEditText etModelo = findViewById(R.id.etModelo);
         TextInputEditText etSerie = findViewById(R.id.etSerie);
         MaterialSwitch switchEstado = findViewById(R.id.switchEstado);
         TextView tvEstadoLabel = findViewById(R.id.tvEstadoLabel);
+
+        TextInputEditText etAsignado = findViewById(R.id.etAsignado);
+        TextInputEditText etDepartamento = findViewById(R.id.etDepartamento);
+        TextInputEditText etUbicacion = findViewById(R.id.etUbicacion);
+
+        TextInputEditText etProcesador = findViewById(R.id.etProcesador);
+        TextInputEditText etRam = findViewById(R.id.etRam);
+        TextInputEditText etAlmacenamiento = findViewById(R.id.etAlmacenamiento);
+        TextInputEditText etSistemaOperativo = findViewById(R.id.etSistemaOperativo);
+
+        TextInputEditText etFechaCompra = findViewById(R.id.etFechaCompra);
+        TextInputEditText etFechaGarantia = findViewById(R.id.etFechaGarantia);
+        TextInputEditText etProveedor = findViewById(R.id.etProveedor);
+        TextInputEditText etValor = findViewById(R.id.etValor);
+        TextInputEditText etObservaciones = findViewById(R.id.etObservaciones);
+
         MaterialCheckBox cbTerminos = findViewById(R.id.cbTerminos);
         MaterialButton btnFoto = findViewById(R.id.btnFoto);
         MaterialButton btnCamara = findViewById(R.id.btnCamara);
@@ -114,17 +144,27 @@ public class agregar_activo extends AppCompatActivity {
         MaterialButton btnCancelar = findViewById(R.id.btnCancelar);
         ivFoto = findViewById(R.id.ivFoto);
 
+        // Al tocar el campo de fecha, se abre un calendario nativo (no se escribe a mano)
+        configurarSelectorFecha(etFechaCompra);
+        configurarSelectorFecha(etFechaGarantia);
+
+        // Ícono de cámara dentro de Etiqueta/Serie: abre el escáner de QR/código de barras
+        tilEtiqueta.setEndIconOnClickListener(v -> escanearCodigo(etEtiqueta));
+        tilSerie.setEndIconOnClickListener(v -> escanearCodigo(etSerie));
+
         // ¿Nos mandaron un Activo existente? Si sí, esto es una EDICIÓN, no una creación.
         activoRecibido = (Activo) getIntent().getSerializableExtra("EXTRA_ACTIVO");
         posicionRecibida = getIntent().getIntExtra("EXTRA_POSICION", -1);
         esEdicion = (posicionRecibida != -1 && activoRecibido != null);
 
         if (esEdicion) {
-            // Precarga el formulario con los datos actuales del activo, como pide el requisito de Update
+            // Precarga el formulario con los datos actuales del activo (requisito de Update)
             tvTituloFormulario.setText("Editar activo");
             btnGuardar.setText("Guardar cambios");
 
             etEtiqueta.setText(activoRecibido.getEtiqueta());
+            etTipo.setText(activoRecibido.getTipo());
+            etMarca.setText(activoRecibido.getMarca());
             etModelo.setText(activoRecibido.getModelo());
             etSerie.setText(activoRecibido.getSerie());
 
@@ -132,12 +172,27 @@ public class agregar_activo extends AppCompatActivity {
             switchEstado.setChecked(estaActivo);
             tvEstadoLabel.setText("Estado: " + activoRecibido.getEstado());
 
+            etAsignado.setText(activoRecibido.getAsignado());
+            etDepartamento.setText(activoRecibido.getDepartamento());
+            etUbicacion.setText(activoRecibido.getUbicacion());
+
+            etProcesador.setText(activoRecibido.getProcesador());
+            etRam.setText(activoRecibido.getRam());
+            etAlmacenamiento.setText(activoRecibido.getAlmacenamiento());
+            etSistemaOperativo.setText(activoRecibido.getSistemaOperativo());
+
+            etFechaCompra.setText(activoRecibido.getFechaCompra());
+            etFechaGarantia.setText(activoRecibido.getFechaVencimientoGarantia());
+            etProveedor.setText(activoRecibido.getProveedor());
+            if (activoRecibido.getValor() != 0) {
+                etValor.setText(String.valueOf(activoRecibido.getValor()));
+            }
+            etObservaciones.setText(activoRecibido.getObservaciones());
+
             // Ya había aceptado los términos la primera vez que se creó, así que lo dejamos marcado
             cbTerminos.setChecked(true);
 
             // Si ya tenía foto guardada, la mostramos y guardamos su Uri para no perderla.
-            // Protegido con try/catch: si esta Uri viene de una foto guardada ANTES
-            // de este fix, es posible que el permiso ya se haya perdido y falle.
             String fotoExistente = activoRecibido.getFoto();
             if (fotoExistente != null && !fotoExistente.isEmpty()) {
                 try {
@@ -155,9 +210,11 @@ public class agregar_activo extends AppCompatActivity {
             tvEstadoLabel.setText("Estado: " + estado);
         });
 
-        // Conecta los 3 campos para que el error en rojo desaparezca apenas
-        // el usuario empieza a escribir algo (sin esperar a que vuelva a dar Guardar)
+        // Conecta los campos obligatorios para que el error en rojo desaparezca
+        // apenas el usuario empieza a escribir algo
         limpiarErrorAlEscribir(etEtiqueta, tilEtiqueta);
+        limpiarErrorAlEscribir(etTipo, tilTipo);
+        limpiarErrorAlEscribir(etMarca, tilMarca);
         limpiarErrorAlEscribir(etModelo, tilModelo);
         limpiarErrorAlEscribir(etSerie, tilSerie);
 
@@ -171,19 +228,20 @@ public class agregar_activo extends AppCompatActivity {
             if (tienePermiso) {
                 abrirCamara();
             } else {
-                // Todavía no tenemos permiso: lo pedimos, y si lo conceden, pedirPermisoCamara abre la cámara
                 pedirPermisoCamara.launch(android.Manifest.permission.CAMERA);
             }
         });
 
         btnGuardar.setOnClickListener(v -> {
-            String etiqueta = etEtiqueta.getText() != null ? etEtiqueta.getText().toString().trim() : "";
-            String modelo = etModelo.getText() != null ? etModelo.getText().toString().trim() : "";
-            String serie = etSerie.getText() != null ? etSerie.getText().toString().trim() : "";
+            String etiqueta = obtenerTexto(etEtiqueta);
+            String tipo = obtenerTexto(etTipo);
+            String marca = obtenerTexto(etMarca);
+            String modelo = obtenerTexto(etModelo);
+            String serie = obtenerTexto(etSerie);
 
-            // validarCampos() marca CADA campo vacío con su propio mensaje de error
-            // (requisito: "Errores con setError, no Toast"). Si algo falla, no seguimos.
-            if (!validarCampos(etiqueta, modelo, serie)) {
+            // validarCampos() marca CADA campo vacío con su propio mensaje de error.
+            // Si algo falla, no seguimos.
+            if (!validarCampos(etiqueta, tipo, marca, modelo, serie)) {
                 return;
             }
 
@@ -196,10 +254,26 @@ public class agregar_activo extends AppCompatActivity {
             String estado = switchEstado.isChecked() ? Activo.ESTADO_ACTIVO : Activo.ESTADO_BAJA;
 
             // Si no seleccionó/tomó foto, guardamos cadena vacía en vez de null
-            // (evita un NullPointerException al hacer fotoUri.toString())
             String foto = fotoUri != null ? fotoUri.toString() : "";
 
-            Activo activoFinal = new Activo(etiqueta, modelo, serie, estado, foto);
+            String valorStr = obtenerTexto(etValor);
+            double valor = 0;
+            if (!TextUtils.isEmpty(valorStr)) {
+                try {
+                    valor = Double.parseDouble(valorStr);
+                } catch (NumberFormatException e) {
+                    etValor.setError("Valor inválido");
+                    return;
+                }
+            }
+
+            Activo activoFinal = new Activo(
+                    etiqueta, tipo, marca, modelo, serie, estado,
+                    obtenerTexto(etAsignado), obtenerTexto(etDepartamento), obtenerTexto(etUbicacion),
+                    obtenerTexto(etProcesador), obtenerTexto(etRam), obtenerTexto(etAlmacenamiento), obtenerTexto(etSistemaOperativo),
+                    obtenerTexto(etFechaCompra), obtenerTexto(etFechaGarantia), obtenerTexto(etProveedor),
+                    valor, obtenerTexto(etObservaciones), foto
+            );
 
             // Si es edición, conserva el id original para que el UPDATE en SQLite funcione
             if (esEdicion) {
@@ -211,8 +285,7 @@ public class agregar_activo extends AppCompatActivity {
             Intent resultado = new Intent();
             resultado.putExtra("EXTRA_ACTIVO", activoFinal);
 
-            // Solo agregamos la posición si es edición; en modo Crear no aplica,
-            // porque el elemento nuevo simplemente se agrega al final de la lista
+            // Solo agregamos la posición si es edición; en modo Crear no aplica
             if (esEdicion) {
                 resultado.putExtra("EXTRA_POSICION", posicionRecibida);
             }
@@ -228,18 +301,36 @@ public class agregar_activo extends AppCompatActivity {
         });
     }
 
-    // Revisa los 3 campos obligatorios. Si alguno está vacío, le pone su propio
+    // Lee un TextInputEditText de forma segura (evita NullPointerException)
+    private String obtenerTexto(TextInputEditText editText) {
+        return editText.getText() != null ? editText.getText().toString().trim() : "";
+    }
+
+    // Revisa los 5 campos obligatorios. Si alguno está vacío, le pone su propio
     // mensaje de error en rojo (setError) bajo ESE campo específico.
-    // Si un campo ya es válido, le quitamos el error (por si venía de un intento anterior).
-    // Devuelve true solo si los 3 campos pasaron la validación.
-    private boolean validarCampos(String etiqueta, String modelo, String serie) {
+    // Devuelve true solo si todos pasaron la validación.
+    private boolean validarCampos(String etiqueta, String tipo, String marca, String modelo, String serie) {
         boolean esValido = true;
 
         if (etiqueta.isEmpty()) {
             tilEtiqueta.setError("La etiqueta es obligatoria");
             esValido = false;
         } else {
-            tilEtiqueta.setError(null); // limpia el error si ya está bien
+            tilEtiqueta.setError(null);
+        }
+
+        if (tipo.isEmpty()) {
+            tilTipo.setError("El tipo es obligatorio");
+            esValido = false;
+        } else {
+            tilTipo.setError(null);
+        }
+
+        if (marca.isEmpty()) {
+            tilMarca.setError("La marca es obligatoria");
+            esValido = false;
+        } else {
+            tilMarca.setError(null);
         }
 
         if (modelo.isEmpty()) {
@@ -260,8 +351,8 @@ public class agregar_activo extends AppCompatActivity {
     }
 
     // Agrega un "vigilante" de texto (TextWatcher) a un campo: cada vez que el
-    // usuario escribe algo, revisa si ya no está vacío y, si es así, borra el
-    // error en rojo de ese campo sin esperar a que vuelva a tocar "Guardar".
+    // usuario escribe algo, revisa si ya no está vacío y borra el error en rojo
+    // sin esperar a que vuelva a tocar "Guardar".
     private void limpiarErrorAlEscribir(TextInputEditText editText, TextInputLayout layout) {
         editText.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -276,6 +367,41 @@ public class agregar_activo extends AppCompatActivity {
         });
     }
 
+    // Abre un calendario nativo al tocar el campo; el usuario no escribe la fecha a mano
+    private void configurarSelectorFecha(TextInputEditText editText) {
+        editText.setOnClickListener(v -> {
+            Calendar calendar = Calendar.getInstance();
+            int anio = calendar.get(Calendar.YEAR);
+            int mes = calendar.get(Calendar.MONTH);
+            int dia = calendar.get(Calendar.DAY_OF_MONTH);
+
+            DatePickerDialog datePicker = new DatePickerDialog(this, (view, y, m, d) -> {
+                String fecha = String.format(Locale.getDefault(), "%02d/%02d/%04d", d, m + 1, y);
+                editText.setText(fecha);
+            }, anio, mes, dia);
+            datePicker.show();
+        });
+    }
+
+    // Abre el escáner de Google (QR y códigos de barra); el resultado se escribe en "destino"
+    private void escanearCodigo(TextInputEditText destino) {
+        GmsBarcodeScannerOptions options = new GmsBarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
+                .build();
+
+        GmsBarcodeScanner scanner = GmsBarcodeScanning.getClient(this, options);
+
+        scanner.startScan()
+                .addOnSuccessListener(barcode -> {
+                    String valor = barcode.getRawValue();
+                    if (valor != null && !valor.isEmpty()) {
+                        destino.setText(valor);
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Snackbar.make(vistaRaiz, "No se pudo escanear: " + e.getMessage(), Snackbar.LENGTH_SHORT).show());
+    }
+
     // Prepara un archivo vacío y su Uri "segura" (vía FileProvider) para que la
     // cámara escriba ahí la foto, y lanza la app de cámara del sistema.
     private void abrirCamara() {
@@ -286,7 +412,7 @@ public class agregar_activo extends AppCompatActivity {
             // FileProvider genera una Uri "content://" segura, en vez de exponer la ruta real del archivo
             fotoUri = FileProvider.getUriForFile(this, getPackageName() + ".fileprovider", archivo);
 
-            tomarFoto.launch(fotoUri); // abre la app de cámara, que guardará la foto en fotoUri
+            tomarFoto.launch(fotoUri);
         } catch (Exception e) {
             Snackbar.make(vistaRaiz, "Error al abrir la cámara", Snackbar.LENGTH_SHORT).show();
         }

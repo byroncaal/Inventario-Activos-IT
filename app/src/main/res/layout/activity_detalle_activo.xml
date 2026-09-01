@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla de solo lectura de un activo, con botones Editar/Eliminar -->
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -23,13 +24,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="center_horizontal"
             android:padding="24dp">
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/ivFotoDetalle"
                 android:layout_width="180dp"
                 android:layout_height="180dp"
+                android:layout_gravity="center_horizontal"
                 android:scaleType="centerCrop"
                 android:background="#E7E0EC"
                 android:src="@android:drawable/ic_menu_camera"
@@ -41,35 +42,83 @@
                 android:id="@+id/tvEtiquetaDetalle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
                 android:textSize="26sp"
                 android:textStyle="bold"
                 tools:text="Etiqueta del activo" />
 
             <TextView
-                android:id="@+id/tvModeloDetalle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:textSize="18sp"
-                tools:text="Modelo: XXX" />
-
-            <TextView
-                android:id="@+id/tvSerieDetalle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="18sp"
-                tools:text="Serie: XXX" />
-
-            <TextView
                 android:id="@+id/tvEstadoDetalle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="4dp"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 tools:text="Estado: Activo" />
+
+            <!-- Cada sección abajo corresponde a una del formulario agregar_activo -->
+            <TextView
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Información general"
+                android:textStyle="bold" />
+
+            <TextView android:id="@+id/tvTipoDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" tools:text="Tipo: Laptop" />
+            <TextView android:id="@+id/tvMarcaDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="Marca: Dell" />
+            <TextView android:id="@+id/tvModeloDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="Modelo: Latitude 5420" />
+            <TextView android:id="@+id/tvSerieDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="Serie: SN12345" />
+
+            <TextView
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Asignación y ubicación"
+                android:textStyle="bold" />
+
+            <TextView android:id="@+id/tvAsignadoDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" tools:text="Asignado a: Juan Pérez" />
+            <TextView android:id="@+id/tvDepartamentoDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="Departamento: IT" />
+            <TextView android:id="@+id/tvUbicacionDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="Ubicación: Piso 2" />
+
+            <TextView
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Especificaciones técnicas"
+                android:textStyle="bold" />
+
+            <TextView android:id="@+id/tvProcesadorDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" tools:text="Procesador: Intel i5" />
+            <TextView android:id="@+id/tvRamDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="RAM: 8GB" />
+            <TextView android:id="@+id/tvAlmacenamientoDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="Almacenamiento: 256GB SSD" />
+            <TextView android:id="@+id/tvSistemaOperativoDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="Sistema operativo: Windows 11" />
+
+            <TextView
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Información comercial"
+                android:textStyle="bold" />
+
+            <TextView android:id="@+id/tvFechaCompraDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" tools:text="Fecha de compra: 01/01/2026" />
+            <TextView android:id="@+id/tvFechaGarantiaDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="Vencimiento de garantía: 01/01/2028" />
+            <TextView android:id="@+id/tvProveedorDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="Proveedor: Compugab" />
+            <TextView android:id="@+id/tvValorDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" tools:text="Valor: 5000.00" />
+
+            <TextView
+                style="@style/TextAppearance.Material3.TitleMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Observaciones"
+                android:textStyle="bold" />
+
+            <TextView android:id="@+id/tvObservacionesDetalle" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" tools:text="Sin observaciones" />
 
             <LinearLayout
                 android:layout_width="match_parent"

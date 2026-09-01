@@ -60,19 +60,56 @@ public class detalle_activo extends AppCompatActivity {
 
         ImageView ivFotoDetalle = findViewById(R.id.ivFotoDetalle);
         TextView tvEtiquetaDetalle = findViewById(R.id.tvEtiquetaDetalle);
+        TextView tvEstadoDetalle = findViewById(R.id.tvEstadoDetalle);
+
+        TextView tvTipoDetalle = findViewById(R.id.tvTipoDetalle);
+        TextView tvMarcaDetalle = findViewById(R.id.tvMarcaDetalle);
         TextView tvModeloDetalle = findViewById(R.id.tvModeloDetalle);
         TextView tvSerieDetalle = findViewById(R.id.tvSerieDetalle);
-        TextView tvEstadoDetalle = findViewById(R.id.tvEstadoDetalle);
+
+        TextView tvAsignadoDetalle = findViewById(R.id.tvAsignadoDetalle);
+        TextView tvDepartamentoDetalle = findViewById(R.id.tvDepartamentoDetalle);
+        TextView tvUbicacionDetalle = findViewById(R.id.tvUbicacionDetalle);
+
+        TextView tvProcesadorDetalle = findViewById(R.id.tvProcesadorDetalle);
+        TextView tvRamDetalle = findViewById(R.id.tvRamDetalle);
+        TextView tvAlmacenamientoDetalle = findViewById(R.id.tvAlmacenamientoDetalle);
+        TextView tvSistemaOperativoDetalle = findViewById(R.id.tvSistemaOperativoDetalle);
+
+        TextView tvFechaCompraDetalle = findViewById(R.id.tvFechaCompraDetalle);
+        TextView tvFechaGarantiaDetalle = findViewById(R.id.tvFechaGarantiaDetalle);
+        TextView tvProveedorDetalle = findViewById(R.id.tvProveedorDetalle);
+        TextView tvValorDetalle = findViewById(R.id.tvValorDetalle);
+        TextView tvObservacionesDetalle = findViewById(R.id.tvObservacionesDetalle);
+
         MaterialButton btnEditar = findViewById(R.id.btnEditar);
         MaterialButton btnEliminar = findViewById(R.id.btnEliminar);
 
         if (activoActual != null) {
             tvEtiquetaDetalle.setText(activoActual.getEtiqueta());
-            tvModeloDetalle.setText("Modelo: " + activoActual.getModelo());
-            tvSerieDetalle.setText("Serie: " + activoActual.getSerie());
-            tvEstadoDetalle.setText("Estado: " + activoActual.getEstado());
+            tvEstadoDetalle.setText("Estado: " + valorOGuion(activoActual.getEstado()));
 
-            // Solo intenta cargar la foto si el activo tiene una guardada.
+            tvTipoDetalle.setText("Tipo: " + valorOGuion(activoActual.getTipo()));
+            tvMarcaDetalle.setText("Marca: " + valorOGuion(activoActual.getMarca()));
+            tvModeloDetalle.setText("Modelo: " + valorOGuion(activoActual.getModelo()));
+            tvSerieDetalle.setText("Serie: " + valorOGuion(activoActual.getSerie()));
+
+            tvAsignadoDetalle.setText("Asignado a: " + valorOGuion(activoActual.getAsignado()));
+            tvDepartamentoDetalle.setText("Departamento: " + valorOGuion(activoActual.getDepartamento()));
+            tvUbicacionDetalle.setText("Ubicación: " + valorOGuion(activoActual.getUbicacion()));
+
+            tvProcesadorDetalle.setText("Procesador: " + valorOGuion(activoActual.getProcesador()));
+            tvRamDetalle.setText("RAM: " + valorOGuion(activoActual.getRam()));
+            tvAlmacenamientoDetalle.setText("Almacenamiento: " + valorOGuion(activoActual.getAlmacenamiento()));
+            tvSistemaOperativoDetalle.setText("Sistema operativo: " + valorOGuion(activoActual.getSistemaOperativo()));
+
+            tvFechaCompraDetalle.setText("Fecha de compra: " + valorOGuion(activoActual.getFechaCompra()));
+            tvFechaGarantiaDetalle.setText("Vencimiento de garantía: " + valorOGuion(activoActual.getFechaVencimientoGarantia()));
+            tvProveedorDetalle.setText("Proveedor: " + valorOGuion(activoActual.getProveedor()));
+            tvValorDetalle.setText("Valor: " + (activoActual.getValor() != 0 ? String.valueOf(activoActual.getValor()) : "-"));
+            tvObservacionesDetalle.setText(valorOGuion(activoActual.getObservaciones()));
+
+            // Solo intenta cargar la foto si el activo tiene una guardada
             String foto = activoActual.getFoto();
             if (foto != null && !foto.isEmpty()) {
                 try {
@@ -107,6 +144,9 @@ public class detalle_activo extends AppCompatActivity {
                     .show();
         });
     }
+
+    // Muestra "-" en vez de dejar vacío un campo opcional que no se llenó
+    private String valorOGuion(String valor) {
+        return (valor == null || valor.isEmpty()) ? "-" : valor;
+    }
 }
-
-

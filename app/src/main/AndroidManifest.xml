@@ -15,9 +15,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Activo_IT">
 
-        <!-- Pantalla principal: lista de activos. Es la entrada de la app -->
+        <!-- Pantalla de login: ahora es la entrada real de la app -->
         <activity
-            android:name=".MainActivity"
+            android:name=".LoginActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -26,7 +26,14 @@
             </intent-filter>
         </activity>
 
-        <!-- Formulario para agregar un activo nuevo. No es de entrada, solo se abre desde MainActivity -->
+        <!-- Pantalla principal: lista de activos. Ya no es el launcher,
+             solo se abre después de un login exitoso -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Formulario para agregar/editar un activo -->
         <activity
             android:name=".agregar_activo"
             android:exported="false"
@@ -47,6 +54,8 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Pantalla de detalle: ver/editar/eliminar un activo -->
         <activity
             android:name=".detalle_activo"
             android:exported="false"

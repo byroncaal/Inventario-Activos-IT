@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Tarjeta individual que representa un activo dentro del RecyclerView -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -15,7 +16,6 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="12dp">
-
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/ivFotoItem"
@@ -48,10 +48,10 @@
                 android:layout_height="wrap_content"
                 android:textSize="13sp"
                 android:textColor="#666666"
-                tools:text="Latitude 5420 · SN12345" />
+                tools:text="Dell Latitude 5420 · SN12345" />
         </LinearLayout>
 
-
+        <!-- Color asignado dinámicamente en ActivoAdapter según el estado -->
         <TextView
             android:id="@+id/tvEstadoItem"
             android:layout_width="wrap_content"

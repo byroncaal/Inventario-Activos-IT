@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -16,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -23,7 +24,9 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+// Pantalla principal: lista de activos con RecyclerView, buscador y botón "Nuevo activo".
+// Implementa la CREATE (vía lanzadorFormulario) y delega UPDATE/DELETE a detalle_activo.
+public class MainActivity extends AppCompatActivity implements ActivoAdapter.OnActivoClickListener {
 
     // Lista en memoria: se carga desde SQLite al abrir la app y se mantiene
     // sincronizada con la base de datos en cada operación
@@ -43,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
                         long id = dbHelper.insertActivo(nuevo);
                         nuevo.setId(id);
                         activos.add(0, nuevo); // arriba, coincide con el orden de la BD (más reciente primero)
-                        adapter.notifyDataSetChanged();
+                        adapter.actualizarLista(activos);
                         actualizarContador();
                     }
                 }
@@ -65,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
                         Activo actualizado = (Activo) data.getSerializableExtra("EXTRA_ACTIVO");
                         if (actualizado != null) {
                             dbHelper.actualizarActivo(actualizado);
-                            activos.set(posicion, actualizado); // reemplaza el activo viejo por el editado
+                            activos.set(posicion, actualizado);
                         }
                     } else if ("ELIMINAR".equals(accion)) {
                         Activo eliminado = activos.get(posicion);
@@ -73,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
                         activos.remove(posicion);
                     }
 
-                    adapter.notifyDataSetChanged();
+                    adapter.actualizarLista(activos);
                     actualizarContador();
                 }
             });
@@ -91,22 +94,21 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        // Registra la MaterialToolbar como la ActionBar de esta pantalla
         MaterialToolbar toolbar = findViewById(R.id.toolbarMain);
         setSupportActionBar(toolbar);
 
         MaterialButton btnNuevo = findViewById(R.id.btnNuevo);
-        ListView lvActivos = findViewById(R.id.lvActivos);
+        RecyclerView rvActivos = findViewById(R.id.rvActivos);
         TextInputEditText etBuscar = findViewById(R.id.etBuscar);
         tvContador = findViewById(R.id.tvContador);
 
+        // READ: carga todo lo guardado en SQLite de sesiones anteriores
         dbHelper = new ActivoDbHelper(this);
-        activos.addAll(dbHelper.obtenerTodos()); // carga lo guardado en sesiones anteriores
+        activos.addAll(dbHelper.obtenerTodos());
 
-        // Se crea con la lista "activos": cualquier cambio en la lista se refleja
-        // llamando adapter.notifyDataSetChanged()
-        adapter = new ActivoAdapter(this, activos);
-        lvActivos.setAdapter(adapter);
+        adapter = new ActivoAdapter(activos, this);
+        rvActivos.setLayoutManager(new LinearLayoutManager(this));
+        rvActivos.setAdapter(adapter);
 
         actualizarContador(); // texto inicial "Activos (N):"
 
@@ -116,34 +118,30 @@ public class MainActivity extends AppCompatActivity {
             lanzadorFormulario.launch(intent);
         });
 
-        // Filtro en vivo: ArrayAdapter (y por herencia, ActivoAdapter) ya trae un
-        // Filter incorporado que compara contra el toString() de cada Activo.
-        // Solo hace falta conectar el texto que se escribe con adapter.getFilter().
+        // Filtro en vivo: cada tecla escrita se reenvía al adapter
         etBuscar.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                adapter.getFilter().filter(s);
+                adapter.filtrar(s.toString());
             }
 
             @Override public void afterTextChanged(Editable s) {}
         });
+    }
 
-        // Al tocar un elemento: abre la pantalla de detalle, no borra directo
-        lvActivos.setOnItemClickListener((parent, view, position, id) -> {
-            // IMPORTANTE: cuando hay un filtro activo, "position" es la posición dentro
-            // de los resultados FILTRADOS, no el índice real en "activos". Por eso
-            // pedimos el objeto ya filtrado (adapter.getItem) y buscamos su índice
-            // verdadero en la lista completa (activos.indexOf) antes de abrir el detalle.
-            Activo seleccionado = adapter.getItem(position);
-            int indiceReal = activos.indexOf(seleccionado);
+    // Se llama cuando se toca cualquier fila del RecyclerView (ver ActivoAdapter).
+    // Busca el índice real dentro de "activos" (no el filtrado) antes de abrir el detalle,
+    // para que UPDATE/DELETE apunten a la posición correcta.
+    @Override
+    public void onActivoClick(Activo activo) {
+        int indiceReal = activos.indexOf(activo);
 
-            Intent intent = new Intent(this, detalle_activo.class);
-            intent.putExtra("EXTRA_ACTIVO", seleccionado);
-            intent.putExtra("EXTRA_POSICION", indiceReal);
-            lanzadorDetalle.launch(intent);
-        });
+        Intent intent = new Intent(this, detalle_activo.class);
+        intent.putExtra("EXTRA_ACTIVO", activo);
+        intent.putExtra("EXTRA_POSICION", indiceReal);
+        lanzadorDetalle.launch(intent);
     }
 
     // Actualiza el texto "Activos (N):" según cuántos elementos hay en la lista
