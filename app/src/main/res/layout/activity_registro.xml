@@ -11,7 +11,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Inventario de Activos IT"
+        android:text="Crear cuenta"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginBottom="8dp"/>
@@ -19,18 +19,18 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Inicia sesión para continuar"
+        android:text="Regístrate para usar el inventario"
         android:textColor="#666666"
         android:layout_marginBottom="32dp"/>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilUsuario"
+        android:id="@+id/tilNuevoUsuario"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etUsuario"
+            android:id="@+id/etNuevoUsuario"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Usuario"
@@ -38,7 +38,7 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/tilPassword"
+        android:id="@+id/tilNuevaPassword"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -46,26 +46,42 @@
         app:passwordToggleEnabled="true">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/etPassword"
+            android:id="@+id/etNuevaPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Contraseña"
             android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilConfirmarPassword"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        app:passwordToggleEnabled="true">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etConfirmarPassword"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Confirmar contraseña"
+            android:inputType="textPassword" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnIngresar"
+        android:id="@+id/btnRegistrar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Ingresar" />
+        android:text="Registrarme" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnIrARegistro"
+        android:id="@+id/btnVolverLogin"
         style="@style/Widget.Material3.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="¿No tienes cuenta? Regístrate" />
+        android:text="Ya tengo cuenta, iniciar sesión" />
 
 </LinearLayout>

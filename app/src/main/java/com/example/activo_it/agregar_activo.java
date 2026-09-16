@@ -1,6 +1,7 @@
 package com.example.activo_it;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -32,11 +33,18 @@ import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.mlkit.vision.barcode.common.Barcode;
 
 import java.io.File;
 import java.util.Calendar;
 import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 // Formulario único para CREAR y EDITAR un activo. El modo se determina
 // según si llegó un Activo existente por Intent (ver esEdicion).
@@ -55,6 +63,23 @@ public class agregar_activo extends AppCompatActivity {
     private Activo activoRecibido;
 
     private TextInputLayout tilEtiqueta, tilTipo, tilMarca, tilModelo, tilSerie;
+
+    // Referencias a los campos que la ficha técnica de Icecat puede autocompletar
+    private TextInputEditText etTipoRef, etMarcaRef, etModeloRef;
+    private TextInputEditText etProcesadorRef, etRamRef, etAlmacenamientoRef, etSistemaOperativoRef;
+
+    // Referencia al Snackbar de "buscando...", para poder cerrarlo cuando llega la respuesta
+    private Snackbar snackbarBuscando;
+
+    // Contenedor simple con los datos útiles extraídos de una ficha técnica de Icecat
+    private static class FichaTecnica {
+        String tipo = "";
+        String procesador = "";
+        String ram = "";
+        String almacenamiento = "";
+        String sistemaOperativo = "";
+        String textoCompleto = "";
+    }
 
     // Selector de imagen de la galería (respeta el sistema de permisos moderno)
     private final ActivityResultLauncher<String[]> seleccionarFoto =
@@ -121,6 +146,7 @@ public class agregar_activo extends AppCompatActivity {
         TextInputEditText etSerie = findViewById(R.id.etSerie);
         MaterialSwitch switchEstado = findViewById(R.id.switchEstado);
         TextView tvEstadoLabel = findViewById(R.id.tvEstadoLabel);
+        MaterialButton btnBuscarIcecat = findViewById(R.id.btnBuscarIcecat);
 
         TextInputEditText etAsignado = findViewById(R.id.etAsignado);
         TextInputEditText etDepartamento = findViewById(R.id.etDepartamento);
@@ -144,13 +170,41 @@ public class agregar_activo extends AppCompatActivity {
         MaterialButton btnCancelar = findViewById(R.id.btnCancelar);
         ivFoto = findViewById(R.id.ivFoto);
 
+        // Guardamos las referencias para poder leerlas/autocompletarlas luego desde la ficha técnica
+        etTipoRef = etTipo;
+        etMarcaRef = etMarca;
+        etModeloRef = etModelo;
+        etProcesadorRef = etProcesador;
+        etRamRef = etRam;
+        etAlmacenamientoRef = etAlmacenamiento;
+        etSistemaOperativoRef = etSistemaOperativo;
+
         // Al tocar el campo de fecha, se abre un calendario nativo (no se escribe a mano)
         configurarSelectorFecha(etFechaCompra);
         configurarSelectorFecha(etFechaGarantia);
 
-        // Ícono de cámara dentro de Etiqueta/Serie: abre el escáner de QR/código de barras
+        // Ícono de cámara en Etiqueta: solo escanea y llena ese campo (tag interno tuyo)
         tilEtiqueta.setEndIconOnClickListener(v -> escanearCodigo(etEtiqueta));
+
+        // Ícono de cámara en Serie: solo escanea y llena el campo (número de serie
+        // real del equipo). No dispara ninguna búsqueda: Icecat no conoce
+        // números de serie, así que este campo queda fuera de esa integración.
         tilSerie.setEndIconOnClickListener(v -> escanearCodigo(etSerie));
+
+        // Botón "Ver ficha técnica": busca en Icecat por Marca + Modelo,
+        // que son datos que siempre tienes disponibles en un equipo ya
+        // desplegado (a diferencia del código de barras o el número de serie).
+        btnBuscarIcecat.setOnClickListener(v -> {
+            String marca = obtenerTexto(etMarcaRef);
+            String modelo = obtenerTexto(etModeloRef);
+
+            if (marca.isEmpty() || modelo.isEmpty()) {
+                Snackbar.make(vistaRaiz, "Completa Marca y Modelo antes de buscar la ficha técnica", Snackbar.LENGTH_LONG).show();
+                return;
+            }
+
+            buscarFichaTecnica(marca, modelo);
+        });
 
         // ¿Nos mandaron un Activo existente? Si sí, esto es una EDICIÓN, no una creación.
         activoRecibido = (Activo) getIntent().getSerializableExtra("EXTRA_ACTIVO");
@@ -400,6 +454,219 @@ public class agregar_activo extends AppCompatActivity {
                 })
                 .addOnFailureListener(e ->
                         Snackbar.make(vistaRaiz, "No se pudo escanear: " + e.getMessage(), Snackbar.LENGTH_SHORT).show());
+    }
+
+    // Consulta Icecat por Marca + Modelo y, si lo encuentra, muestra la ficha
+    // técnica completa en un diálogo.
+    private void buscarFichaTecnica(String marca, String modelo) {
+        snackbarBuscando = Snackbar.make(vistaRaiz, "Buscando ficha técnica...", Snackbar.LENGTH_INDEFINITE);
+        snackbarBuscando.show();
+
+        IcecatApiService apiService = IcecatRetrofitClient.getInstance().create(IcecatApiService.class);
+        Call<JsonObject> call = apiService.getProductByBrandAndModel(
+                BuildConfig.ICECAT_API_TOKEN,
+                BuildConfig.ICECAT_CONTENT_TOKEN,
+                IcecatConfig.SHOPNAME,
+                marca,
+                modelo,
+                "en",
+                ""
+        );
+
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                cerrarSnackbarBuscando();
+
+                if (response.isSuccessful() && response.body() != null) {
+                    FichaTecnica ficha = construirFichaTecnica(response.body());
+                    mostrarFichaTecnica(ficha);
+                } else {
+                    Snackbar.make(vistaRaiz,
+                            "No se encontró ese modelo en Icecat (código " + response.code() + "). Puede que ese modelo no esté en la base de datos gratuita.",
+                            Snackbar.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable throwable) {
+                cerrarSnackbarBuscando();
+                Snackbar.make(vistaRaiz, "Sin conexión, inténtalo más tarde", Snackbar.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void cerrarSnackbarBuscando() {
+        if (snackbarBuscando != null) {
+            snackbarBuscando.dismiss();
+            snackbarBuscando = null;
+        }
+    }
+
+    // Recorre el JSON de Icecat y arma un texto legible con toda la ficha
+    // técnica (Categoría + todas las especificaciones agrupadas), y además
+    // detecta por nombre algunos campos clave (Procesador, RAM, Almacenamiento,
+    // Sistema Operativo) para poder autocompletarlos si el usuario lo pide.
+    private FichaTecnica construirFichaTecnica(JsonObject body) {
+        FichaTecnica ficha = new FichaTecnica();
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            JsonObject data = obtenerObjetoSeguro(body, "data");
+            if (data == null) {
+                ficha.textoCompleto = "No se encontraron datos para este producto.";
+                return ficha;
+            }
+
+            JsonObject generalInfo = obtenerObjetoSeguro(data, "GeneralInfo");
+            if (generalInfo != null) {
+                String titulo = obtenerValorSeguro(generalInfo, "Title");
+                String marcaProd = obtenerValorSeguro(generalInfo, "Brand");
+
+                if (!titulo.isEmpty()) sb.append(titulo).append("\n\n");
+                if (!marcaProd.isEmpty()) sb.append("Marca: ").append(marcaProd).append("\n");
+
+                JsonObject categoria = obtenerObjetoSeguro(generalInfo, "Category");
+                if (categoria != null) {
+                    JsonObject nombreCat = obtenerObjetoSeguro(categoria, "Name");
+                    if (nombreCat != null) {
+                        String valorCat = obtenerValorSeguro(nombreCat, "Value");
+                        if (!valorCat.isEmpty()) {
+                            ficha.tipo = valorCat;
+                            sb.append("Categoría: ").append(valorCat).append("\n");
+                        }
+                    }
+                }
+                sb.append("\n");
+            }
+
+            if (data.has("FeaturesGroups") && data.get("FeaturesGroups").isJsonArray()) {
+                JsonArray grupos = data.getAsJsonArray("FeaturesGroups");
+                for (JsonElement grupoEl : grupos) {
+                    if (!grupoEl.isJsonObject()) continue;
+                    JsonObject grupo = grupoEl.getAsJsonObject();
+
+                    String nombreGrupo = "";
+                    JsonObject featureGroup = obtenerObjetoSeguro(grupo, "FeatureGroup");
+                    if (featureGroup != null) {
+                        JsonObject nombreObj = obtenerObjetoSeguro(featureGroup, "Name");
+                        if (nombreObj != null) {
+                            nombreGrupo = obtenerValorSeguro(nombreObj, "Value");
+                        }
+                    }
+                    if (!nombreGrupo.isEmpty()) {
+                        sb.append("— ").append(nombreGrupo).append(" —\n");
+                    }
+
+                    if (grupo.has("Features") && grupo.get("Features").isJsonArray()) {
+                        JsonArray features = grupo.getAsJsonArray("Features");
+                        for (JsonElement featEl : features) {
+                            if (!featEl.isJsonObject()) continue;
+                            JsonObject feat = featEl.getAsJsonObject();
+
+                            String nombreFeature = "";
+                            JsonObject featureObj = obtenerObjetoSeguro(feat, "Feature");
+                            if (featureObj != null) {
+                                JsonObject nombreFObj = obtenerObjetoSeguro(featureObj, "Name");
+                                if (nombreFObj != null) {
+                                    nombreFeature = obtenerValorSeguro(nombreFObj, "Value");
+                                }
+                            }
+
+                            String valorFeature = obtenerValorSeguro(feat, "PresentationValue");
+                            if (valorFeature.isEmpty()) {
+                                valorFeature = obtenerValorSeguro(feat, "Value");
+                            }
+
+                            if (!nombreFeature.isEmpty() && !valorFeature.isEmpty()) {
+                                sb.append(nombreFeature).append(": ").append(valorFeature).append("\n");
+
+                                String nombreLower = nombreFeature.toLowerCase(Locale.ROOT);
+                                if (ficha.procesador.isEmpty() && (nombreLower.contains("processor") || nombreLower.contains("cpu"))) {
+                                    ficha.procesador = valorFeature;
+                                } else if (ficha.ram.isEmpty() && nombreLower.contains("ram")) {
+                                    ficha.ram = valorFeature;
+                                } else if (ficha.almacenamiento.isEmpty()
+                                        && (nombreLower.contains("storage capacity") || nombreLower.contains("ssd capacity") || nombreLower.contains("hdd capacity"))) {
+                                    ficha.almacenamiento = valorFeature;
+                                } else if (ficha.sistemaOperativo.isEmpty() && nombreLower.contains("operating system")) {
+                                    ficha.sistemaOperativo = valorFeature;
+                                }
+                            }
+                        }
+                    }
+                    sb.append("\n");
+                }
+            }
+        } catch (Exception e) {
+            // Si algo del JSON viene en un formato inesperado, no crasheamos:
+            // simplemente mostramos lo que ya se alcanzó a armar.
+        }
+
+        ficha.textoCompleto = sb.length() > 0 ? sb.toString() : "No se encontraron especificaciones detalladas para este producto.";
+        return ficha;
+    }
+
+    private String obtenerValorSeguro(JsonObject obj, String key) {
+        if (obj == null || !obj.has(key) || obj.get(key).isJsonNull()) return "";
+        try {
+            return obj.get(key).getAsString();
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private JsonObject obtenerObjetoSeguro(JsonObject obj, String key) {
+        if (obj == null || !obj.has(key) || !obj.get(key).isJsonObject()) return null;
+        return obj.getAsJsonObject(key);
+    }
+
+    // Muestra la ficha técnica completa en un diálogo. El usuario puede
+    // cerrarlo sin más, o presionar "Usar estos datos" para aplicar al
+    // formulario los campos que sí se lograron identificar.
+    private void mostrarFichaTecnica(FichaTecnica ficha) {
+        String texto = ficha.textoCompleto;
+        String textoMostrado = texto.length() > 4000 ? texto.substring(0, 4000) + "\n\n...(cortado)" : texto;
+
+        new AlertDialog.Builder(this)
+                .setTitle("Ficha técnica")
+                .setMessage(textoMostrado)
+                .setPositiveButton("Usar estos datos", (dialog, which) -> aplicarFicha(ficha))
+                .setNegativeButton("Cerrar", null)
+                .show();
+    }
+
+    // Aplica al formulario los campos que sí se lograron identificar
+    // (Tipo, Procesador, RAM, Almacenamiento, Sistema Operativo).
+    private void aplicarFicha(FichaTecnica ficha) {
+        int aplicados = 0;
+
+        if (!ficha.tipo.isEmpty()) {
+            etTipoRef.setText(ficha.tipo);
+            aplicados++;
+        }
+        if (!ficha.procesador.isEmpty()) {
+            etProcesadorRef.setText(ficha.procesador);
+            aplicados++;
+        }
+        if (!ficha.ram.isEmpty()) {
+            etRamRef.setText(ficha.ram);
+            aplicados++;
+        }
+        if (!ficha.almacenamiento.isEmpty()) {
+            etAlmacenamientoRef.setText(ficha.almacenamiento);
+            aplicados++;
+        }
+        if (!ficha.sistemaOperativo.isEmpty()) {
+            etSistemaOperativoRef.setText(ficha.sistemaOperativo);
+            aplicados++;
+        }
+
+        if (aplicados > 0) {
+            Snackbar.make(vistaRaiz, "Datos aplicados al formulario", Snackbar.LENGTH_SHORT).show();
+        } else {
+            Snackbar.make(vistaRaiz, "No se encontraron campos específicos para autocompletar", Snackbar.LENGTH_SHORT).show();
+        }
     }
 
     // Prepara un archivo vacío y su Uri "segura" (vía FileProvider) para que la

@@ -1,12 +1,14 @@
 package com.example.activo_it;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -21,39 +23,43 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 
-// Pantalla principal: lista de activos con RecyclerView, buscador y botón "Nuevo activo".
-// Implementa la CREATE (vía lanzadorFormulario) y delega UPDATE/DELETE a detalle_activo.
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MainActivity extends AppCompatActivity implements ActivoAdapter.OnActivoClickListener {
 
-    // Lista en memoria: se carga desde SQLite al abrir la app y se mantiene
-    // sincronizada con la base de datos en cada operación
+    // TEMPORAL: username de Icecat para las pruebas.
+    // Reemplázalo por tu propio username (lo ves en icecat.biz/en/myIcecat).
+    // Mientras tanto, "openIcecat-live" es la cuenta demo pública y sirve
+    // para confirmar que la llamada funciona.
+    private static final String ICECAT_SHOPNAME = "openIcecat-live";
+
     private final ArrayList<Activo> activos = new ArrayList<>();
 
     private ActivoAdapter adapter;
-    private ActivoDbHelper dbHelper;
+    private ActivoDao activoDao;
 
     private TextView tvContador;
 
-    // Lanzador para CREAR: abre agregar_activo vacío, guarda en SQLite y espera un Activo nuevo de vuelta
     private final ActivityResultLauncher<Intent> lanzadorFormulario =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), resultado -> {
                 if (resultado.getResultCode() == Activity.RESULT_OK && resultado.getData() != null) {
                     Activo nuevo = (Activo) resultado.getData().getSerializableExtra("EXTRA_ACTIVO");
                     if (nuevo != null) {
-                        long id = dbHelper.insertActivo(nuevo);
+                        long id = activoDao.insertar(nuevo);
                         nuevo.setId(id);
-                        activos.add(0, nuevo); // arriba, coincide con el orden de la BD (más reciente primero)
+                        activos.add(0, nuevo);
                         adapter.actualizarLista(activos);
                         actualizarContador();
                     }
                 }
             });
 
-    // Lanzador para el DETALLE: espera de vuelta una acción (ACTUALIZAR o ELIMINAR)
-    // junto con la posición REAL del elemento afectado dentro de "activos".
     private final ActivityResultLauncher<Intent> lanzadorDetalle =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), resultado -> {
                 if (resultado.getResultCode() == Activity.RESULT_OK && resultado.getData() != null) {
@@ -61,18 +67,17 @@ public class MainActivity extends AppCompatActivity implements ActivoAdapter.OnA
                     String accion = data.getStringExtra("EXTRA_ACCION");
                     int posicion = data.getIntExtra("EXTRA_POSICION", -1);
 
-                    // Por seguridad: si la posición no es válida, no tocamos nada
                     if (posicion < 0 || posicion >= activos.size()) return;
 
                     if ("ACTUALIZAR".equals(accion)) {
                         Activo actualizado = (Activo) data.getSerializableExtra("EXTRA_ACTIVO");
                         if (actualizado != null) {
-                            dbHelper.actualizarActivo(actualizado);
+                            activoDao.actualizar(actualizado);
                             activos.set(posicion, actualizado);
                         }
                     } else if ("ELIMINAR".equals(accion)) {
                         Activo eliminado = activos.get(posicion);
-                        dbHelper.eliminarActivo(eliminado.getId());
+                        activoDao.eliminar(eliminado.getId());
                         activos.remove(posicion);
                     }
 
@@ -87,7 +92,6 @@ public class MainActivity extends AppCompatActivity implements ActivoAdapter.OnA
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-        // Ajusta el padding para que el contenido no quede debajo de la barra de estado/navegación
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (View v, WindowInsetsCompat insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -102,23 +106,20 @@ public class MainActivity extends AppCompatActivity implements ActivoAdapter.OnA
         TextInputEditText etBuscar = findViewById(R.id.etBuscar);
         tvContador = findViewById(R.id.tvContador);
 
-        // READ: carga todo lo guardado en SQLite de sesiones anteriores
-        dbHelper = new ActivoDbHelper(this);
-        activos.addAll(dbHelper.obtenerTodos());
+        activoDao = new ActivoDao(this);
+        activos.addAll(activoDao.obtenerTodos());
 
         adapter = new ActivoAdapter(activos, this);
         rvActivos.setLayoutManager(new LinearLayoutManager(this));
         rvActivos.setAdapter(adapter);
 
-        actualizarContador(); // texto inicial "Activos (N):"
+        actualizarContador();
 
-        // Abrir el formulario para agregar un activo nuevo
         btnNuevo.setOnClickListener(v -> {
             Intent intent = new Intent(this, agregar_activo.class);
             lanzadorFormulario.launch(intent);
         });
 
-        // Filtro en vivo: cada tecla escrita se reenvía al adapter
         etBuscar.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
@@ -129,11 +130,58 @@ public class MainActivity extends AppCompatActivity implements ActivoAdapter.OnA
 
             @Override public void afterTextChanged(Editable s) {}
         });
+
+        //probarIcecat(); // TEMPORAL: solo para ver la estructura real del JSON, luego se quita
     }
 
-    // Se llama cuando se toca cualquier fila del RecyclerView (ver ActivoAdapter).
-    // Busca el índice real dentro de "activos" (no el filtrado) antes de abrir el detalle,
-    // para que UPDATE/DELETE apunten a la posición correcta.
+    // TEMPORAL: llamada de prueba a Icecat con un producto real conocido (monitor iiyama),
+    // solo para confirmar el formato exacto de la respuesta antes de integrarlo al formulario.
+    /*
+    private void probarIcecat() {
+        IcecatApiService apiService = IcecatRetrofitClient.getInstance().create(IcecatApiService.class);
+        Call<JsonObject> call = apiService.getProductByGtin(
+                BuildConfig.ICECAT_API_TOKEN,
+                BuildConfig.ICECAT_CONTENT_TOKEN,
+                ICECAT_SHOPNAME,
+                "4948570114344",
+                "en",
+                ""
+        );
+
+        call.enqueue(new Callback<JsonObject>() {
+            @Override
+            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    String json = response.body().toString();
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Respuesta cruda de Icecat")
+                            .setMessage(json.length() > 3000 ? json.substring(0, 3000) + "\n\n...(cortado)" : json)
+                            .setPositiveButton("Cerrar", null)
+                            .show();
+                } else {
+                    String errorBody = "";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception e) {
+                        errorBody = "(no se pudo leer el cuerpo del error)";
+                    }
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle("Error " + response.code())
+                            .setMessage(errorBody.isEmpty() ? "Sin detalle adicional" : errorBody)
+                            .setPositiveButton("Cerrar", null)
+                            .show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JsonObject> call, Throwable throwable) {
+                Toast.makeText(MainActivity.this, "Sin conexión: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+*/
     @Override
     public void onActivoClick(Activo activo) {
         int indiceReal = activos.indexOf(activo);
@@ -144,7 +192,6 @@ public class MainActivity extends AppCompatActivity implements ActivoAdapter.OnA
         lanzadorDetalle.launch(intent);
     }
 
-    // Actualiza el texto "Activos (N):" según cuántos elementos hay en la lista
     private void actualizarContador() {
         tvContador.setText("Activos (" + activos.size() + "):");
     }

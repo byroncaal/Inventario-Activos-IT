@@ -1,19 +1,17 @@
 package com.example.activo_it;
 
-import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import java.util.ArrayList;
-import java.util.List;
-
+// Solo se encarga del ESQUEMA de la base de datos (crear/actualizar tablas).
+// El acceso a los datos (CRUD) vive en las clases DAO: ActivoDao y UsuarioDao.
 public class ActivoDbHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "activo_it.db";
     private static final int DATABASE_VERSION = 3;
 
+    // --- Tabla de activos ---
     public static final String TABLE_ACTIVOS = "activos";
     public static final String COL_ID = "id";
     public static final String COL_ETIQUETA = "etiqueta";
@@ -36,6 +34,7 @@ public class ActivoDbHelper extends SQLiteOpenHelper {
     public static final String COL_OBSERVACIONES = "observaciones";
     public static final String COL_FOTO = "foto";
 
+    // --- Tabla de usuarios (login) ---
     public static final String TABLE_USUARIOS = "usuarios";
     public static final String COL_USER_ID = "id";
     public static final String COL_USERNAME = "username";
@@ -86,121 +85,18 @@ public class ActivoDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Solo se recrea la tabla de activos; la de usuarios se conserva
+        // entre actualizaciones para no perder las cuentas ya creadas/registradas.
         db.execSQL(SQL_DELETE_TABLE_ACTIVOS);
         onCreate(db);
     }
 
-    // Crea admin/admin123 la primera vez que se crea la base de datos.
-    // La contraseña por defecto vive en local.properties (BuildConfig.ADMIN_DEFAULT_PASSWORD),
-    // no escrita literal aquí, para no exponer credenciales en el código fuente versionado.
+    // Crea admin/admin123 la primera vez. INSERT OR IGNORE respeta el UNIQUE
+    // de username, así nunca se duplica ni sobreescribe en ejecuciones futuras.
     private void crearUsuarioPorDefecto(SQLiteDatabase db) {
-        String passwordHash = PasswordUtils.hashPassword(BuildConfig.ADMIN_DEFAULT_PASSWORD);
+        String passwordHash = PasswordUtils.hashPassword("admin123");
         db.execSQL("INSERT OR IGNORE INTO " + TABLE_USUARIOS +
                         " (" + COL_USERNAME + ", " + COL_PASSWORD_HASH + ") VALUES (?, ?)",
                 new Object[]{"admin", passwordHash});
-    }
-
-    public boolean validarCredenciales(String username, String password) {
-        String passwordHash = PasswordUtils.hashPassword(password);
-
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(
-                TABLE_USUARIOS,
-                new String[]{COL_USER_ID},
-                COL_USERNAME + " = ? AND " + COL_PASSWORD_HASH + " = ?",
-                new String[]{username, passwordHash},
-                null, null, null
-        );
-
-        boolean valido = cursor.getCount() > 0;
-        cursor.close();
-        db.close();
-        return valido;
-    }
-
-    public long insertActivo(Activo activo) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = construirValues(activo);
-        long id = db.insert(TABLE_ACTIVOS, null, values);
-        db.close();
-        return id;
-    }
-
-    public List<Activo> obtenerTodos() {
-        List<Activo> lista = new ArrayList<>();
-        String query = "SELECT * FROM " + TABLE_ACTIVOS + " ORDER BY " + COL_ID + " DESC";
-
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(query, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                Activo activo = new Activo(
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_ETIQUETA)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_TIPO)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_MARCA)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_MODELO)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_SERIE)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_ESTADO)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_ASIGNADO)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_DEPARTAMENTO)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_UBICACION)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_PROCESADOR)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_RAM)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_ALMACENAMIENTO)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_SISTEMA_OPERATIVO)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_FECHA_COMPRA)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_FECHA_GARANTIA)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_PROVEEDOR)),
-                        cursor.getDouble(cursor.getColumnIndexOrThrow(COL_VALOR)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_OBSERVACIONES)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(COL_FOTO))
-                );
-                activo.setId(cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)));
-                lista.add(activo);
-            } while (cursor.moveToNext());
-        }
-        cursor.close();
-        db.close();
-        return lista;
-    }
-
-    public int actualizarActivo(Activo activo) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = construirValues(activo);
-        int filas = db.update(TABLE_ACTIVOS, values, COL_ID + "=?",
-                new String[]{String.valueOf(activo.getId())});
-        db.close();
-        return filas;
-    }
-
-    public void eliminarActivo(long id) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_ACTIVOS, COL_ID + "=?", new String[]{String.valueOf(id)});
-        db.close();
-    }
-
-    private ContentValues construirValues(Activo activo) {
-        ContentValues values = new ContentValues();
-        values.put(COL_ETIQUETA, activo.getEtiqueta());
-        values.put(COL_TIPO, activo.getTipo());
-        values.put(COL_MARCA, activo.getMarca());
-        values.put(COL_MODELO, activo.getModelo());
-        values.put(COL_SERIE, activo.getSerie());
-        values.put(COL_ESTADO, activo.getEstado());
-        values.put(COL_ASIGNADO, activo.getAsignado());
-        values.put(COL_DEPARTAMENTO, activo.getDepartamento());
-        values.put(COL_UBICACION, activo.getUbicacion());
-        values.put(COL_PROCESADOR, activo.getProcesador());
-        values.put(COL_RAM, activo.getRam());
-        values.put(COL_ALMACENAMIENTO, activo.getAlmacenamiento());
-        values.put(COL_SISTEMA_OPERATIVO, activo.getSistemaOperativo());
-        values.put(COL_FECHA_COMPRA, activo.getFechaCompra());
-        values.put(COL_FECHA_GARANTIA, activo.getFechaVencimientoGarantia());
-        values.put(COL_PROVEEDOR, activo.getProveedor());
-        values.put(COL_VALOR, activo.getValor());
-        values.put(COL_OBSERVACIONES, activo.getObservaciones());
-        values.put(COL_FOTO, activo.getFoto());
-        return values;
     }
 }

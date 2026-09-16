@@ -26,6 +26,12 @@
             </intent-filter>
         </activity>
 
+        <!-- Pantalla de registro de nuevos usuarios -->
+        <activity
+            android:name=".RegistroActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Pantalla principal: lista de activos. Ya no es el launcher,
              solo se abre después de un login exitoso -->
         <activity

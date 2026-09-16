@@ -94,6 +94,17 @@
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Botón para consultar la ficha técnica en Icecat usando Marca + Modelo,
+             que son los datos disponibles en un equipo ya desplegado -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBuscarIcecat"
+            style="@style/Widget.Material3.Button.TonalButton.Icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Ver ficha técnica"
+            app:icon="@android:drawable/ic_menu_search" />
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilSerie"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"

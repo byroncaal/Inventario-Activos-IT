@@ -15,11 +15,9 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
-// Pantalla de entrada de la app. Valida usuario/contraseña contra la tabla
-// "usuarios" de SQLite (ver ActivoDbHelper.validarCredenciales).
 public class LoginActivity extends AppCompatActivity {
 
-    private ActivoDbHelper dbHelper;
+    private UsuarioDao usuarioDao;
     private TextInputLayout tilUsuario, tilPassword;
 
     @Override
@@ -28,7 +26,6 @@ public class LoginActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
 
-        // Ajusta el padding para que el contenido no quede debajo de la barra de estado/navegación
         View vistaRaiz = findViewById(R.id.main);
         ViewCompat.setOnApplyWindowInsetsListener(vistaRaiz, (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -36,13 +33,14 @@ public class LoginActivity extends AppCompatActivity {
             return insets;
         });
 
-        dbHelper = new ActivoDbHelper(this);
+        usuarioDao = new UsuarioDao(this);
 
         tilUsuario = findViewById(R.id.tilUsuario);
         tilPassword = findViewById(R.id.tilPassword);
         TextInputEditText etUsuario = findViewById(R.id.etUsuario);
         TextInputEditText etPassword = findViewById(R.id.etPassword);
         MaterialButton btnIngresar = findViewById(R.id.btnIngresar);
+        MaterialButton btnIrARegistro = findViewById(R.id.btnIrARegistro);
 
         btnIngresar.setOnClickListener(v -> {
             String usuario = etUsuario.getText() != null ? etUsuario.getText().toString().trim() : "";
@@ -50,7 +48,6 @@ public class LoginActivity extends AppCompatActivity {
 
             boolean esValido = true;
 
-            // Marca cada campo vacío con su propio error (setError), sin usar Toast
             if (TextUtils.isEmpty(usuario)) {
                 tilUsuario.setError("Ingresa tu usuario");
                 esValido = false;
@@ -69,13 +66,16 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
 
-            if (dbHelper.validarCredenciales(usuario, password)) {
+            if (usuarioDao.validarCredenciales(usuario, password)) {
                 Intent intent = new Intent(this, MainActivity.class);
                 startActivity(intent);
-                finish(); // el botón "atrás" no debe regresar al login
+                finish();
             } else {
                 tilPassword.setError("Usuario o contraseña incorrectos");
             }
         });
+
+        btnIrARegistro.setOnClickListener(v ->
+                startActivity(new Intent(this, RegistroActivity.class)));
     }
 }
