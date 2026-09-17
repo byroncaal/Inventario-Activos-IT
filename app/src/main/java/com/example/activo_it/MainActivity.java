@@ -1,14 +1,12 @@
 package com.example.activo_it;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -23,21 +21,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
 public class MainActivity extends AppCompatActivity implements ActivoAdapter.OnActivoClickListener {
-
-    // TEMPORAL: username de Icecat para las pruebas.
-    // Reemplázalo por tu propio username (lo ves en icecat.biz/en/myIcecat).
-    // Mientras tanto, "openIcecat-live" es la cuenta demo pública y sirve
-    // para confirmar que la llamada funciona.
-    private static final String ICECAT_SHOPNAME = "openIcecat-live";
 
     private final ArrayList<Activo> activos = new ArrayList<>();
 
@@ -130,58 +117,8 @@ public class MainActivity extends AppCompatActivity implements ActivoAdapter.OnA
 
             @Override public void afterTextChanged(Editable s) {}
         });
-
-        //probarIcecat(); // TEMPORAL: solo para ver la estructura real del JSON, luego se quita
     }
 
-    // TEMPORAL: llamada de prueba a Icecat con un producto real conocido (monitor iiyama),
-    // solo para confirmar el formato exacto de la respuesta antes de integrarlo al formulario.
-    /*
-    private void probarIcecat() {
-        IcecatApiService apiService = IcecatRetrofitClient.getInstance().create(IcecatApiService.class);
-        Call<JsonObject> call = apiService.getProductByGtin(
-                BuildConfig.ICECAT_API_TOKEN,
-                BuildConfig.ICECAT_CONTENT_TOKEN,
-                ICECAT_SHOPNAME,
-                "4948570114344",
-                "en",
-                ""
-        );
-
-        call.enqueue(new Callback<JsonObject>() {
-            @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    String json = response.body().toString();
-                    new AlertDialog.Builder(MainActivity.this)
-                            .setTitle("Respuesta cruda de Icecat")
-                            .setMessage(json.length() > 3000 ? json.substring(0, 3000) + "\n\n...(cortado)" : json)
-                            .setPositiveButton("Cerrar", null)
-                            .show();
-                } else {
-                    String errorBody = "";
-                    try {
-                        if (response.errorBody() != null) {
-                            errorBody = response.errorBody().string();
-                        }
-                    } catch (Exception e) {
-                        errorBody = "(no se pudo leer el cuerpo del error)";
-                    }
-                    new AlertDialog.Builder(MainActivity.this)
-                            .setTitle("Error " + response.code())
-                            .setMessage(errorBody.isEmpty() ? "Sin detalle adicional" : errorBody)
-                            .setPositiveButton("Cerrar", null)
-                            .show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<JsonObject> call, Throwable throwable) {
-                Toast.makeText(MainActivity.this, "Sin conexión: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-*/
     @Override
     public void onActivoClick(Activo activo) {
         int indiceReal = activos.indexOf(activo);
