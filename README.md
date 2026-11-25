@@ -68,7 +68,6 @@ Archivo `activo_it.db` con dos tablas:
 En la carpeta `Documentos`:
 
 - `Activo_IT_Manual_de_Usuario.pdf`
-- `Activo_IT_Speech.pdf`
 
 ## Posibles mejoras
 
